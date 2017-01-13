@@ -1,13 +1,28 @@
 from sense_hat import SenseHat
 from time import sleep, strftime, localtime
+try:
+    from xml.etree import cElementTree as ElementTree
+except ImportError, e:
+    from xml.etree import ElementTree
 import json
+import xmltodict
 import requests
 import configparser
 
 sense = SenseHat()
 
+# For reading config file
 config = configparser.ConfigParser()
 config.read("config.ini")
+
+# set up wunderground url
+w_key = config['weather']['wunderground_key']
+w_url = 'http://api.wunderground.com/api/' + w_key + '/conditions/yesterday/forecast/q/UT/Roy.json'
+
+# set up uta url
+b_key = config['uta']['uta_key']
+b_stop = config['uta']['stop_id']
+b_url = 'http://api.rideuta.com/SIRI/SIRI.svc/StopMonitor?stopid=' + b_stop + '&minutesout=' + '90' + '&usertoken=' + b_key
 
 testing = False
 testing = True
@@ -20,6 +35,30 @@ o = [100,50,0] # Orange
 r = [100,0,0] # Red
 e = [0,0,0] # Empty
 w = [90,90,100]
+
+def show_bus(progress_rate):
+    print("Progress: %s" % progress_rate)
+    if progress_rate == 1: # On time
+        color = g
+        rows = 4
+    elif progress_rate == 0: # 5-10 min early
+        color = b
+        rows = 2
+    elif progress_rate == 4: # 10+ min early
+        color = b
+        rows = 4
+    elif progress_rate == 2: # 5-10 min late
+        color = r
+        rows = 2
+    elif progress_rate == 3: # 10+ min late
+        color = r
+        rows = 4
+    else:
+        rows = 0
+    while rows > 0:
+        rows -= 1
+        for x in range(4):
+            sense.set_pixel(x, rows, color)
 
 def show_uv(uv):
     print("UV: %s" % uv)
@@ -105,33 +144,37 @@ def show_curr(temp, temp_yes):
         sense.set_pixel(0+cols,4,color)
         sense.set_pixel(0+cols,5,color)
 
-key = config['weather']['wunderground_key']
-
 while True:
     if not testing:
-        url = 'http://api.wunderground.com/api/' + key + '/conditions/yesterday/forecast/q/UT/Roy.json'
-        parsed_json = requests.get(url).json()
+        parsed_json = requests.get(w_url).json()
+        with open('api.xml') as xml_string:
+            parsed_xml = xmltodict.parse(xml_string)
     else:
         with open('api.json') as json_string:
             parsed_json = json.load(json_string)
+        with open('api.xml') as xml_string:
+            parsed_xml = xmltodict.parse(xml_string)
 
+    # UTA
+    progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
+
+    # Weather
     uv = float(parsed_json['current_observation']['UV'])
     pop = int(parsed_json['forecast']['txt_forecast']['forecastday'][0]['pop'])
     snow = parsed_json['current_observation']['icon'] == 'snow'
     temp = float(parsed_json['current_observation']['temp_f'])
-
     temp_yes = 0 # Just in case
     for obs in parsed_json['history']['observations']:
         if obs['date']['hour'] == strftime("%H", localtime()):
             temp_yes = float(obs['tempi'])
             break
-
     hi_now = int(parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
     hi_tom = int(parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
 
     # Print stuff
     sense.clear()
     print(strftime("%a, %d %b %Y %H:%M:%S +0000", localtime()))
+    show_bus(progress_rate)
     show_uv(uv)
     show_pop(pop, snow)
     show_his(hi_now, hi_tom)

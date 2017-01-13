@@ -1,0 +1,52 @@
+<Siri xmlns="http://www.siri.org.uk/siri" version="1.3">
+  <ResponseTimestamp>2017-01-13T10:25:41.4256693-07:00</ResponseTimestamp>
+  <StopMonitoringDelivery version="1.3">
+    <ResponseTimestamp>2017-01-13T10:25:41.4256693-07:00</ResponseTimestamp>
+    <ValidUntil>2017-01-13T10:25:51.4256693-07:00</ValidUntil>
+    <MonitoredStopVisit>
+      <RecordedAtTime>2017-01-13T10:25:41.4256693-07:00</RecordedAtTime>
+      <MonitoredVehicleJourney>
+        <LineRef>604</LineRef>
+        <DirectionRef>TO W.OGDEN/ ROY</DirectionRef>
+        <FramedVehicleJourneyRef>
+          <DataFrameRef>2017-01-13T00:00:00-07:00</DataFrameRef>
+          <DatedVehicleJourneyRef>2927877</DatedVehicleJourneyRef>
+        </FramedVehicleJourneyRef>
+        <PublishedLineName>WEST OGDEN</PublishedLineName>
+        <OriginRef>623135</OriginRef>
+        <DestinationRef>628015</DestinationRef>
+        <Monitored>True</Monitored>
+        <VehicleLocation>
+          <Longitude>-112.02825</Longitude>
+          <Latitude>41.15969</Latitude>
+        </VehicleLocation>
+        <ProgressRate>1</ProgressRate>
+        <CourseOfJourneyRef>4547</CourseOfJourneyRef>
+        <VehicleRef>9985</VehicleRef>
+        <MonitoredCall>
+          <StopPointRef>628015</StopPointRef>
+          <VisitNumber>1</VisitNumber>
+          <VehicleAtStop>false</VehicleAtStop>
+          <Extensions>
+            <EstimatedDepartureTime>378</EstimatedDepartureTime>
+            <Direction>Ogden Transit Center</Direction>
+            <Distance>38859452.500863172</Distance>
+          </Extensions>
+        </MonitoredCall>
+        <Extensions>
+          <LastGPSFix>2017-01-13T10:25:35.6</LastGPSFix>
+          <Scheduled>False</Scheduled>
+          <Bearing>273.6</Bearing>
+          <Speed>0</Speed>
+          <DestinationName>West Ogden/Roy</DestinationName>
+        </Extensions>
+      </MonitoredVehicleJourney>
+    </MonitoredStopVisit>
+    <Extensions>
+      <StopName>3500 W @ 5512 S (ROY)</StopName>
+      <StopLongitude>-112.064331000</StopLongitude>
+      <StopLatitude>41.163017000</StopLatitude>
+      <StopLocation>Utah</StopLocation>
+    </Extensions>
+  </StopMonitoringDelivery>
+</Siri>
