@@ -25,7 +25,7 @@ b_stop = config['uta']['stop_id']
 b_url = 'http://api.rideuta.com/SIRI/SIRI.svc/StopMonitor?stopid=' + b_stop + '&minutesout=' + '90' + '&usertoken=' + b_key
 
 testing = False
-testing = True
+# testing = True
 
 #colours
 g = [0,100,0] # Green
