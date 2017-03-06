@@ -27,4 +27,9 @@ stop_id = xxxxxx
 
 [weather]
 wunderground_key = xxxxxxxxxxxxxxxx
+
+[solar]
+enphase_user_id = xxxxxxxxxxxxxxxxxx
+enphase_key = xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+enphase_system_id = xxxxxxx
 ```

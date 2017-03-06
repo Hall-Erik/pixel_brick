@@ -1,2 +1,6 @@
 config.ini
 wundergroundkey
+solar_summary.json
+solar_lifetime.json
+api.xml
+api.json
