@@ -4,3 +4,6 @@ solar_summary.json
 solar_lifetime.json
 api.xml
 api.json
+__pycache__/
+sandbox.py
+model.pyc

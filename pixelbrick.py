@@ -9,16 +9,13 @@ import xmltodict
 import requests
 import configparser
 import datetime
+import model
 
 sense = SenseHat()
 
 # For reading config file
 config = configparser.ConfigParser()
 config.read("config.ini")
-
-# For saving
-persist = configparser.ConfigParser()
-persist.read("persistence.ini")
 
 # set up wunderground url
 w_key = config['weather']['wunderground_key']
@@ -29,18 +26,8 @@ b_key = config['uta']['uta_key']
 b_stop = config['uta']['stop_id']
 b_url = 'http://api.rideuta.com/SIRI/SIRI.svc/StopMonitor?stopid=' + b_stop + '&minutesout=' + '90' + '&usertoken=' + b_key
 
-# set up solar urls
-todaysDate = datetime.date.today()
-month = str(todaysDate.replace(day=1))
-s_key = config['solar']['enphase_key']
-s_u_id = config['solar']['enphase_user_id']
-s_s_id = config['solar']['enphase_system_id']
-s_summary_url = 'https://api.enphaseenergy.com/api/v2/systems/' + s_s_id + '/summary?key=' + s_key + '&user_id=' + s_u_id
-s_month_url = 'https://api.enphaseenergy.com/api/v2/systems/' + s_s_id + '/energy_lifetime?key=' + s_key + '&user_id=' + s_u_id + '&start_date=' + month
-
-# get solar records
-daily_rcd = persist['solar'].getint('daily_rcd', 0)
-monthly_rcd = persist['solar'].getint('monthly_rcd', 0)
+# Initialize Solar model
+solar = model.SolarModel()
 
 testing = False
 # testing = True
@@ -173,7 +160,7 @@ def show_solar_summary(kWh_today, daily_rcd):
         cols = 2
     elif diff > 50 and diff <= 75:
         cols = 3
-    elif pop > 75:
+    elif diff > 75:
         cols = 4
     while cols > 0:
         cols -= 1
@@ -191,7 +178,7 @@ def show_solar_month(kWh_month, monthly_rcd):
         cols = 2
     elif diff > 50 and diff <= 75:
         cols = 3
-    elif pop > 75:
+    elif diff > 75:
         cols = 4
     while cols > 0:
         cols -= 1
@@ -201,8 +188,7 @@ def show_solar_month(kWh_month, monthly_rcd):
 while True:
     if not testing:
         parsed_json = requests.get(w_url).json()
-        solar_summary_json = requests.get(s_summary_url).json()
-        solar_month_json = requests.get(s_month_url).json()
+        solar.update()
         with open('api.xml') as xml_string:
             parsed_xml = xmltodict.parse(xml_string)
     else:
@@ -227,23 +213,6 @@ while True:
     hi_now = int(parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
     hi_tom = int(parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
 
-    # Solar
-    kWh_today = int(solar_summary_json['energy_today'])
-    production = solar_month_json['production']
-    kWh_month = kWh_today
-    for p in production:
-        kWh_month += int(p)
-
-    if kWh_today > daily_rcd:
-        daily_rcd = kWh_today
-        persist['solar']['daily_rcd'] = str(daily_rcd)
-    if kWh_month > monthly_rcd:
-        monthly_rcd = kWh_month
-        persist['solar']['monthly_rcd'] = str(monthly_rcd)
-
-    with open('persistence.ini', 'w') as persistfile:
-        persist.write(persistfile)
-
     # Print stuff
     sense.clear()
     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
@@ -252,7 +221,7 @@ while True:
     show_pop(pop, snow)
     show_his(hi_now, hi_tom)
     show_curr(temp, temp_yes)
-    show_solar_summary(kWh_today, daily_rcd)
-    show_solar_month(kWh_month, monthly_rcd)
+    show_solar_summary(solar.kWh_today, solar.daily_rcd)
+    show_solar_month(solar.kWh_month, solar.monthly_rcd)
 
     sleep(60 * 15)
