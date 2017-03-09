@@ -1,4 +1,5 @@
 import abc # for abstractions
+from time import strftime, localtime
 try:
     from xml.etree import cElementTree as ElementTree
 except ImportError, e:
@@ -31,6 +32,36 @@ class Model(object):
         if datetime.datetime.now() > self.nextUpdate:
             self.hitApi()
 
+class WeatherModel(Model):
+    def __init__(self):
+        global config
+        w_key = config['weather']['wunderground_key']
+        self.w_url = 'http://api.wunderground.com/api/' + w_key + '/conditions/yesterday/forecast/q/UT/Roy.json'
+        self.hitApi()
+
+    def __str__(self):
+        uv = "UV: " + str(self.uv) + "\n"
+        pop = "Precip: " + str(self.pop) + "%\n"
+        hi = "Hi: " + str(self.hi_now) + " Tomorrow: " + str(self.hi_tom) + " Diff: " + str(abs(self.hi_now-self.hi_tom)) + "\n"
+        curr = "Temp: " + str(self.temp) + " yesterday: " + str(self.temp_yes) + " Diff: " + str(abs(self.temp-self.temp_yes))
+        return uv + pop + hi + curr
+
+    def hitApi(self):
+        parsed_json = requests.get(self.w_url).json()
+        self.uv = float(parsed_json['current_observation']['UV'])
+        self.pop = int(parsed_json['forecast']['txt_forecast']['forecastday'][0]['pop'])
+        self.snow = parsed_json['current_observation']['icon'] == 'snow'
+        self.temp = float(parsed_json['current_observation']['temp_f'])
+        self.temp_yes = 0 # Just in case
+        for obs in parsed_json['history']['observations']:
+            if obs['date']['hour'] == strftime("%H", localtime()):
+                self.temp_yes = float(obs['tempi'])
+                break
+        self.hi_now = int(parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
+        self.hi_tom = int(parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
+
+        self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+
 class SolarModel(Model):
     def __init__(self):
         global config
@@ -45,7 +76,9 @@ class SolarModel(Model):
         self.hitApi()
 
     def __str__(self):
-        return "energy today: " + str(self.kWh_today/1000.0) + "kWh\n" + "energy this month: " + str(self.kWh_month/1000.0) + "kWh"
+        today = "energy today: " + str(self.kWh_today/1000.0) + "kWh / " + str(self.daily_rcd/1000.0) + "kWh " + str(int(float(self.kWh_today)/float(self.daily_rcd)*100.0)) + "%\n"
+        month = "energy this month: " + str(self.kWh_month/1000.0) + "kWh / " + str(self.monthly_rcd/1000.0) + "kWh " + str(int(float(self.kWh_month)/float(self.monthly_rcd)*100.0))
+        return today + month
 
     def hitApi(self):
         global persist

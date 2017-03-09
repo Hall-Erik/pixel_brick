@@ -4,11 +4,8 @@ try:
     from xml.etree import cElementTree as ElementTree
 except ImportError, e:
     from xml.etree import ElementTree
-import json
 import xmltodict
-import requests
 import configparser
-import datetime
 import model
 
 sense = SenseHat()
@@ -17,9 +14,8 @@ sense = SenseHat()
 config = configparser.ConfigParser()
 config.read("config.ini")
 
-# set up wunderground url
-w_key = config['weather']['wunderground_key']
-w_url = 'http://api.wunderground.com/api/' + w_key + '/conditions/yesterday/forecast/q/UT/Roy.json'
+# Initialize Weather model
+weather = model.WeatherModel()
 
 # set up uta url
 b_key = config['uta']['uta_key']
@@ -66,7 +62,7 @@ def show_bus(progress_rate):
             sense.set_pixel(x, rows, color)
 
 def show_uv(uv):
-    print("UV: %s" % uv)
+    # print("UV: %s" % uv)
     cols = 0
     color = g
     if uv > 0 and uv <= 3:
@@ -87,7 +83,7 @@ def show_uv(uv):
         sense.set_pixel(4+cols,7,color)
 
 def show_pop(pop, snow):
-    print("POP: %s" % pop)
+    # print("POP: %s" % pop)
     cols = 0
     if snow:
         color = w
@@ -108,7 +104,7 @@ def show_pop(pop, snow):
         sense.set_pixel(4+cols,5,color)
 
 def show_his(hi_now, hi_tom):
-    print("hi diff: " + str(hi_tom - hi_now))
+    # print("hi diff: " + str(hi_tom - hi_now))
     cols = 0
     if hi_tom > hi_now:
         color = o
@@ -121,7 +117,7 @@ def show_his(hi_now, hi_tom):
         cols = 2
     elif diff > 10 and diff <= 15:
         cols = 3
-    elif pop > 15:
+    elif diff > 15:
         cols = 4
     while cols > 0:
         cols -= 1
@@ -129,7 +125,7 @@ def show_his(hi_now, hi_tom):
         sense.set_pixel(0+cols,7,color)
 
 def show_curr(temp, temp_yes):
-    print("temp diff: " + str(temp - temp_yes))
+    # print("temp diff: " + str(temp - temp_yes))
     cols = 0
     if temp > temp_yes:
         color = o
@@ -142,7 +138,7 @@ def show_curr(temp, temp_yes):
         cols = 2
     elif diff > 10 and diff <= 15:
         cols = 3
-    elif pop > 15:
+    elif diff > 15:
         cols = 4
     while cols > 0:
         cols -= 1
@@ -150,7 +146,7 @@ def show_curr(temp, temp_yes):
         sense.set_pixel(0+cols,5,color)
 
 def show_solar_summary(kWh_today, daily_rcd):
-    print("energy today: " + str(kWh_today/1000.0) + "kWh")
+    # print("energy today: " + str(kWh_today/1000.0) + "kWh")
     cols = 0
     color = y
     diff = float(kWh_today) / float(daily_rcd) * 100
@@ -168,7 +164,7 @@ def show_solar_summary(kWh_today, daily_rcd):
         sense.set_pixel(4+cols,1,color)
 
 def show_solar_month(kWh_month, monthly_rcd):
-    print("energy this month: " + str(kWh_month/1000.0) + "kWh")
+    # print("energy this month: " + str(kWh_month/1000.0) + "kWh")
     cols = 0
     color = y
     diff = float(kWh_month) / float(monthly_rcd) * 100
@@ -187,41 +183,28 @@ def show_solar_month(kWh_month, monthly_rcd):
 
 while True:
     if not testing:
-        parsed_json = requests.get(w_url).json()
         solar.update()
+        weather.update()
         with open('api.xml') as xml_string:
             parsed_xml = xmltodict.parse(xml_string)
     else:
-        with open('api.json') as json_string:
-            parsed_json = json.load(json_string)
         with open('api.xml') as xml_string:
             parsed_xml = xmltodict.parse(xml_string)
 
     # UTA
     progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
 
-    # Weather
-    uv = float(parsed_json['current_observation']['UV'])
-    pop = int(parsed_json['forecast']['txt_forecast']['forecastday'][0]['pop'])
-    snow = parsed_json['current_observation']['icon'] == 'snow'
-    temp = float(parsed_json['current_observation']['temp_f'])
-    temp_yes = 0 # Just in case
-    for obs in parsed_json['history']['observations']:
-        if obs['date']['hour'] == strftime("%H", localtime()):
-            temp_yes = float(obs['tempi'])
-            break
-    hi_now = int(parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
-    hi_tom = int(parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
-
     # Print stuff
     sense.clear()
     print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
     show_bus(progress_rate)
-    show_uv(uv)
-    show_pop(pop, snow)
-    show_his(hi_now, hi_tom)
-    show_curr(temp, temp_yes)
+    show_uv(weather.uv)
+    show_pop(weather.pop, weather.snow)
+    show_his(weather.hi_now, weather.hi_tom)
+    show_curr(weather.temp, weather.temp_yes)
     show_solar_summary(solar.kWh_today, solar.daily_rcd)
     show_solar_month(solar.kWh_month, solar.monthly_rcd)
+    print(weather)
+    print(solar)
 
     sleep(60 * 15)
