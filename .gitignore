@@ -7,3 +7,4 @@ api.json
 __pycache__/
 sandbox.py
 model.pyc
+persistence.ini
