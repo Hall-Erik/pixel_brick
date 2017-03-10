@@ -77,7 +77,7 @@ class SolarModel(Model):
 
     def __str__(self):
         today = "energy today: " + str(self.kWh_today/1000.0) + "kWh / " + str(self.daily_rcd/1000.0) + "kWh " + str(int(float(self.kWh_today)/float(self.daily_rcd)*100.0)) + "%\n"
-        month = "energy this month: " + str(self.kWh_month/1000.0) + "kWh / " + str(self.monthly_rcd/1000.0) + "kWh " + str(int(float(self.kWh_month)/float(self.monthly_rcd)*100.0))
+        month = "energy this month: " + str(self.kWh_month/1000.0) + "kWh / " + str(self.monthly_rcd/1000.0) + "kWh " + str(int(float(self.kWh_month)/float(self.monthly_rcd)*100.0)) + "%"
         return today + month
 
     def hitApi(self):

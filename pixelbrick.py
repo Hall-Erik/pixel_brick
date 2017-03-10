@@ -7,6 +7,7 @@ except ImportError, e:
 import xmltodict
 import configparser
 import model
+import requests
 
 sense = SenseHat()
 
@@ -185,14 +186,19 @@ while True:
     if not testing:
         solar.update()
         weather.update()
-        with open('api.xml') as xml_string:
-            parsed_xml = xmltodict.parse(xml_string)
+        parsed_xml = xmltodict.parse(requests.get(b_url).text)
+        # with open('api.xml') as xml_string:
+        #     parsed_xml = xmltodict.parse(xml_string)
     else:
         with open('api.xml') as xml_string:
             parsed_xml = xmltodict.parse(xml_string)
 
     # UTA
-    progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
+    print(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit'])
+    if 'MonitoredVehicleJourney' in parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit'].keys():
+        progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
+    else:
+        progress_rate = -1
 
     # Print stuff
     sense.clear()
