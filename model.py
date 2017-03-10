@@ -32,6 +32,36 @@ class Model(object):
         if datetime.datetime.now() > self.nextUpdate:
             self.hitApi()
 
+class BusModel(Model):
+    def __init__(self):
+        global config
+        b_key = config['uta']['uta_key']
+        b_stop = config['uta']['stop_id']
+        self.b_url = 'http://api.rideuta.com/SIRI/SIRI.svc/StopMonitor?stopid=' + b_stop + '&minutesout=' + '120' + '&usertoken=' + b_key
+        self.hitApi()
+
+    def __str__(self):
+        if self.progress_rate == 1:
+            return "Next bus is on time."
+        elif self.progress_rate == 0:
+            return "Next bus is 5-10 minutes early."
+        elif self.progress_rate == 4:
+            return "Next bus is 10+ minutes early."
+        elif self.progress_rate == 2:
+            return "Next bus is 5-10 minutes late."
+        elif self.progress_rate == 3:
+            return "Next bus is 10+ minutes late."
+        else:
+            return "No bus data for this stop at this time."
+
+    def hitApi(self):
+        parsed_xml = xmltodict.parse(requests.get(self.b_url).text)
+        if 'MonitoredVehicleJourney' in parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit'].keys():
+            self.progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
+        else:
+            self.progress_rate = -1
+        self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+
 class WeatherModel(Model):
     def __init__(self):
         global config
