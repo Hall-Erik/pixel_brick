@@ -29,8 +29,8 @@ class Model(object):
         raise NotImplementedError('must implement hitApi method to this base class.')
 
     def update(self):
-        if datetime.datetime.now() > self.nextUpdate:
-            self.hitApi()
+        # if datetime.datetime.now() > self.nextUpdate:
+        self.hitApi()
 
 class BusModel(Model):
     def __init__(self):
@@ -38,7 +38,8 @@ class BusModel(Model):
         b_key = config['uta']['uta_key']
         b_stop = config['uta']['stop_id']
         self.b_url = 'http://api.rideuta.com/SIRI/SIRI.svc/StopMonitor?stopid=' + b_stop + '&minutesout=' + '120' + '&usertoken=' + b_key
-        self.hitApi()
+        # self.hitApi()
+        self.updated = False
 
     def __str__(self):
         if self.progress_rate == 1:
@@ -60,14 +61,16 @@ class BusModel(Model):
             self.progress_rate = int(parsed_xml['Siri']['StopMonitoringDelivery']['MonitoredStopVisit']['MonitoredVehicleJourney']['ProgressRate'])
         else:
             self.progress_rate = -1
-        self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        # self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        self.updated = True
 
 class WeatherModel(Model):
     def __init__(self):
         global config
         w_key = config['weather']['wunderground_key']
         self.w_url = 'http://api.wunderground.com/api/' + w_key + '/conditions/yesterday/forecast/q/UT/Roy.json'
-        self.hitApi()
+        # self.hitApi()
+        self.updated = False
 
     def __str__(self):
         uv = "UV: " + str(self.uv) + "\n"
@@ -90,7 +93,8 @@ class WeatherModel(Model):
         self.hi_now = int(parsed_json['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
         self.hi_tom = int(parsed_json['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
 
-        self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        # self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        self.updated = True
 
 class SolarModel(Model):
     def __init__(self):
@@ -103,7 +107,8 @@ class SolarModel(Model):
         # get solar records
         self.daily_rcd = persist['solar'].getint('daily_rcd', 0)
         self.monthly_rcd = persist['solar'].getint('monthly_rcd', 0)
-        self.hitApi()
+        # self.hitApi()
+        self.updated = False
 
     def __str__(self):
         today = "energy today: " + str(self.kWh_today/1000.0) + "kWh / " + str(self.daily_rcd/1000.0) + "kWh " + str(int(float(self.kWh_today)/float(self.daily_rcd)*100.0)) + "%\n"
@@ -134,4 +139,5 @@ class SolarModel(Model):
         with open('persistence.ini', 'w') as persistfile:
             persist.write(persistfile)
 
-        self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        # self.nextUpdate = datetime.datetime.now() + datetime.timedelta(minutes=15)
+        self.updated = True

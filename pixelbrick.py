@@ -1,6 +1,9 @@
 from sense_hat import SenseHat
 from time import sleep, strftime, localtime
 import model
+import thread
+import traceback
+import datetime
 
 sense = SenseHat()
 
@@ -155,23 +158,42 @@ def show_solar_month(kWh_month, monthly_rcd):
         sense.set_pixel(4+cols,2,color)
         sense.set_pixel(4+cols,3,color)
 
+def x_thread(obj, delay):
+    while True:
+        obj.update()
+        sleep(delay)
+
+try:
+    thread.start_new_thread( x_thread, (bus, 60*15) )
+    thread.start_new_thread( x_thread, (weather, 60*15) )
+    thread.start_new_thread( x_thread, (solar, 60*15) )
+except:
+    print "Error starting thread."
+    traceback.print_exc()
+
 while True:
-    solar.update()
-    weather.update()
-    bus.update()
 
-    # Print stuff
-    sense.clear()
-    print(strftime("%a, %d %b %Y %H:%M:%S", localtime()))
-    show_bus(bus.progress_rate)
-    show_uv(weather.uv)
-    show_pop(weather.pop, weather.snow)
-    show_his(weather.hi_now, weather.hi_tom)
-    show_curr(weather.temp, weather.temp_yes)
-    show_solar_summary(solar.kWh_today, solar.daily_rcd)
-    show_solar_month(solar.kWh_month, solar.monthly_rcd)
-    print(bus)
-    print(weather)
-    print(solar)
+    if bus.updated or weather.updated or solar.updated:
+        sense.clear()
+        show_bus(bus.progress_rate)
+        show_uv(weather.uv)
+        show_pop(weather.pop, weather.snow)
+        show_his(weather.hi_now, weather.hi_tom)
+        show_curr(weather.temp, weather.temp_yes)
+        show_solar_summary(solar.kWh_today, solar.daily_rcd)
+        show_solar_month(solar.kWh_month, solar.monthly_rcd)
+        if bus.updated:
+            print("Bus info updated at " + strftime("%H:%M:%S", localtime()))
+            bus.updated = False
+            print(bus)
+        if weather.updated:
+            print("Weather info updated at " + strftime("%H:%M:%S", localtime()))
+            weather.updated = False
+            print(weather)
+        if solar.updated:
+            print("Solar info updated at " + strftime("%H:%M:%S", localtime()))
+            solar.updated = False
+            print(solar)
+        print("")
 
-    sleep(60 * 15)
+    sleep(5)
