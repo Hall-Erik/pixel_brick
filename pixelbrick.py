@@ -2,6 +2,7 @@ from sense_hat import SenseHat
 from time import sleep, strftime, localtime
 import model
 import thread
+import os
 import traceback
 import datetime
 
@@ -11,6 +12,9 @@ sense = SenseHat()
 weather = model.WeatherModel()
 bus = model.BusModel()
 solar = model.SolarModel()
+
+#If true show default pixel display
+show_blocks = True
 
 #colours
 g = [0,100,0] # Green
@@ -158,15 +162,45 @@ def show_solar_month(kWh_month, monthly_rcd):
         sense.set_pixel(4+cols,2,color)
         sense.set_pixel(4+cols,3,color)
 
+# Show default pixel display
+def show_blocks(refresh_rate):
+    while True:
+        if show_blocks:
+            sense.clear()
+            show_bus(bus.progress_rate)
+            show_uv(weather.uv)
+            show_pop(weather.pop, weather.snow)
+            show_his(weather.hi_now, weather.hi_tom)
+            show_curr(weather.temp, weather.temp_yes)
+            show_solar_summary(solar.kWh_today, solar.daily_rcd)
+            show_solar_month(solar.kWh_month, solar.monthly_rcd)
+            sleep(refresh_rate)
+        sleep(0.1)
+
+# Tells XModel object to pull fresh data from its API
 def x_thread(obj, delay):
     while True:
         obj.update()
         sleep(delay)
 
+def joystick(delay):
+    global show_blocks
+    while True:
+        for event in sense.stick.get_events():
+            if event.action == "released" and event.direction == "middle":
+                show_blocks = not show_blocks
+                sense.clear()
+
 try:
+    # Services
     thread.start_new_thread( x_thread, (bus, 60*15) )
     thread.start_new_thread( x_thread, (weather, 60*15) )
     thread.start_new_thread( x_thread, (solar, 60*15) )
+    sleep(5) # Give some time to pull data before displaying
+    # Display
+    thread.start_new_thread( show_blocks, (5,))
+    # Listen to the joystick
+    thread.start_new_thread( joystick, (0.1,))
 except:
     print "Error starting thread."
     traceback.print_exc()
@@ -174,26 +208,14 @@ except:
 while True:
 
     if bus.updated or weather.updated or solar.updated:
-        sense.clear()
-        show_bus(bus.progress_rate)
-        show_uv(weather.uv)
-        show_pop(weather.pop, weather.snow)
-        show_his(weather.hi_now, weather.hi_tom)
-        show_curr(weather.temp, weather.temp_yes)
-        show_solar_summary(solar.kWh_today, solar.daily_rcd)
-        show_solar_month(solar.kWh_month, solar.monthly_rcd)
-        if bus.updated:
-            print("Bus info updated at " + strftime("%H:%M:%S", localtime()))
-            bus.updated = False
-            print(bus)
-        if weather.updated:
-            print("Weather info updated at " + strftime("%H:%M:%S", localtime()))
-            weather.updated = False
-            print(weather)
-        if solar.updated:
-            print("Solar info updated at " + strftime("%H:%M:%S", localtime()))
-            solar.updated = False
-            print(solar)
+        # os.system('clear')
+        print(bus)
+        print(weather)
+        print(solar)
         print("")
 
-    sleep(5)
+        if bus.updated: bus.updated = False
+        if weather.updated: weather.updated = False
+        if solar.updated: solar.updated = False
+
+    sleep(2)
