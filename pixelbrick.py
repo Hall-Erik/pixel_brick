@@ -1,6 +1,7 @@
 from sense_hat import SenseHat
 from time import sleep, strftime, localtime
 import model
+import view
 import thread
 import os
 import traceback
@@ -12,6 +13,8 @@ sense = SenseHat()
 weather = model.WeatherModel()
 bus = model.BusModel()
 solar = model.SolarModel()
+
+bView = view.BlockView(bus,weather,solar)
 
 #If true show default pixel display
 show_blocks = True
@@ -167,13 +170,22 @@ def show_blocks(refresh_rate):
     while True:
         if show_blocks:
             sense.clear()
-            show_bus(bus.progress_rate)
-            show_uv(weather.uv)
-            show_pop(weather.pop, weather.snow)
-            show_his(weather.hi_now, weather.hi_tom)
-            show_curr(weather.temp, weather.temp_yes)
-            show_solar_summary(solar.kWh_today, solar.daily_rcd)
-            show_solar_month(solar.kWh_month, solar.monthly_rcd)
+            if bus.updated:
+                show_bus(bus.progress_rate)
+                print(bus)
+                bus.updated = False
+            if weather.updated:
+                show_uv(weather.uv)
+                show_pop(weather.pop, weather.snow)
+                show_his(weather.hi_now, weather.hi_tom)
+                show_curr(weather.temp, weather.temp_yes)
+                print(weather)
+                weather.updated = False
+            if solar.updated:
+                show_solar_summary(solar.kWh_today, solar.daily_rcd)
+                show_solar_month(solar.kWh_month, solar.monthly_rcd)
+                print(solar)
+                solar.updated = False
             sleep(refresh_rate)
         sleep(0.1)
 
@@ -198,7 +210,7 @@ try:
     thread.start_new_thread( x_thread, (solar, 60*15) )
     sleep(5) # Give some time to pull data before displaying
     # Display
-    thread.start_new_thread( show_blocks, (5,))
+    # thread.start_new_thread( show_blocks, (5,))
     # Listen to the joystick
     thread.start_new_thread( joystick, (0.1,))
 except:
@@ -206,16 +218,16 @@ except:
     traceback.print_exc()
 
 while True:
-
-    if bus.updated or weather.updated or solar.updated:
-        # os.system('clear')
-        print(bus)
-        print(weather)
-        print(solar)
-        print("")
-
-        if bus.updated: bus.updated = False
-        if weather.updated: weather.updated = False
-        if solar.updated: solar.updated = False
+    bView.refresh()
+    # if bus.updated or weather.updated or solar.updated:
+    #     # os.system('clear')
+    #     print(bus)
+    #     print(weather)
+    #     print(solar)
+    #     print("")
+    #
+    #     if bus.updated: bus.updated = False
+    #     if weather.updated: weather.updated = False
+    #     if solar.updated: solar.updated = False
 
     sleep(2)
