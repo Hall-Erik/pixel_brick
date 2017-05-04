@@ -37,6 +37,9 @@ class BlockView(object):
     def refresh(self):
         self.show_bus()
         self.show_uv()
+        self.show_pop()
+        self.show_his()
+        self.show_curr()
         if self.updated:
             print(self.bus)
             print(self.weather)
@@ -91,5 +94,66 @@ class BlockView(object):
             self.set_column(pos=3+offset, val=e)
         elif uv > 8:
             for i in range(0,4): self.set_column(pos=i+offset, val=r)
+        else:
+            for i in range(0,4): self.set_column(pos=i+offset, val=e)
+
+    def show_pop(self):
+        offset = 36
+        pop = self.weather.pop
+        color = w if self.weather.snow else b
+
+        if pop > 0 and pop <= 25:
+            for i in range(0,1): self.set_column(pos=i+offset, val=color)
+            for i in range(1,4): self.set_column(pos=i+offset, val=e)
+        elif pop > 25 and pop <= 50:
+            for i in range(0,2): self.set_column(pos=i+offset, val=color)
+            for i in range(2,4): self.set_column(pos=i+offset, val=e)
+        elif pop > 50 and pop <= 75:
+            for i in range(0,3): self.set_column(pos=i+offset, val=color)
+            for i in range(3,4): self.set_column(pos=i+offset, val=e)
+        elif pop > 75:
+            for i in range(0,4): self.set_column(pos=i+offset, val=color)
+        else:
+            for i in range(0,4): self.set_column(pos=i+offset, val=e)
+
+    def show_his(self):
+        offset = 48
+        hi_now = self.weather.hi_now
+        hi_tom = self.weather.hi_tom
+        color = o if hi_tom > hi_now else b
+        diff = abs(hi_now - hi_tom)
+
+        if diff > 0 and diff <= 5:
+            for i in range(0,1): self.set_column(pos=i+offset, val=color)
+            for i in range(1,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 5 and diff <= 10:
+            for i in range(0,2): self.set_column(pos=i+offset, val=color)
+            for i in range(2,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 10 and diff <= 15:
+            for i in range(0,3): self.set_column(pos=i+offset, val=color)
+            for i in range(3,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 15:
+            for i in range(0,4): self.set_column(pos=i+offset, val=color)
+        else:
+            for i in range(0,4): self.set_column(pos=i+offset, val=e)
+
+    def show_curr(self):
+        offset = 32
+        temp = self.weather.temp
+        temp_yes = self.weather.temp_yes
+        color = o if temp > temp_yes else b
+        diff = abs(temp - temp_yes)
+
+        if diff > 0 and diff <= 5:
+            for i in range(0,1): self.set_column(pos=i+offset, val=color)
+            for i in range(1,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 5 and diff <= 10:
+            for i in range(0,2): self.set_column(pos=i+offset, val=color)
+            for i in range(2,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 10 and diff <= 15:
+            for i in range(0,3): self.set_column(pos=i+offset, val=color)
+            for i in range(3,4): self.set_column(pos=i+offset, val=e)
+        elif diff > 15:
+            for i in range(0,4): self.set_column(pos=i+offset, val=color)
         else:
             for i in range(0,4): self.set_column(pos=i+offset, val=e)
