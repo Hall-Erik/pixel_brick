@@ -122,6 +122,9 @@ class SolarModel(Model):
         production = solar_month_json['production']
         self.kWh_month = self.kWh_today
         for p in production:
+            if p > self.daily_rcd:
+                self.daily_rcd = p
+                persist['solar']['daily_rcd'] = str(self.daily_rcd)
             self.kWh_month += int(p)
 
         if self.kWh_today > self.daily_rcd:

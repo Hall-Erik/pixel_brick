@@ -40,10 +40,9 @@ class BlockView(object):
         self.show_pop()
         self.show_his()
         self.show_curr()
+        self.show_solar_summary()
+        self.show_solar_month()
         if self.updated:
-            print(self.bus)
-            print(self.weather)
-            print(self.solar)
             self.draw()
 
     def draw(self):
@@ -154,6 +153,46 @@ class BlockView(object):
             for i in range(0,3): self.set_column(pos=i+offset, val=color)
             for i in range(3,4): self.set_column(pos=i+offset, val=e)
         elif diff > 15:
+            for i in range(0,4): self.set_column(pos=i+offset, val=color)
+        else:
+            for i in range(0,4): self.set_column(pos=i+offset, val=e)
+
+    def show_solar_summary(self):
+        offset = 4
+        kWh_today = self.solar.kWh_today
+        daily_rcd = self.solar.daily_rcd
+        perc = float(kWh_today) / float(daily_rcd) * 100
+        color = y
+        if perc > 0 and perc <= 25:
+            for i in range(0,1): self.set_column(pos=i+offset, val=color)
+            for i in range(1,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 25 and perc <= 50:
+            for i in range(0,2): self.set_column(pos=i+offset, val=color)
+            for i in range(2,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 50 and perc <= 75:
+            for i in range(0,3): self.set_column(pos=i+offset, val=color)
+            for i in range(3,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 75:
+            for i in range(0,4): self.set_column(pos=i+offset, val=color)
+        else:
+            for i in range(0,4): self.set_column(pos=i+offset, val=e)
+
+    def show_solar_month(self):
+        offset = 20
+        kWh_month = self.solar.kWh_month
+        monthly_rcd = self.solar.monthly_rcd
+        perc = float(kWh_month) / float(monthly_rcd) * 100
+        color = y
+        if perc > 0 and perc <= 25:
+            for i in range(0,1): self.set_column(pos=i+offset, val=color)
+            for i in range(1,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 25 and perc <= 50:
+            for i in range(0,2): self.set_column(pos=i+offset, val=color)
+            for i in range(2,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 50 and perc <= 75:
+            for i in range(0,3): self.set_column(pos=i+offset, val=color)
+            for i in range(3,4): self.set_column(pos=i+offset, val=e)
+        elif perc > 75:
             for i in range(0,4): self.set_column(pos=i+offset, val=color)
         else:
             for i in range(0,4): self.set_column(pos=i+offset, val=e)
