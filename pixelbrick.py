@@ -15,11 +15,16 @@ bus = model.BusModel()
 solar = model.SolarModel()
 
 # Initialize the view
-# bView is the main view that shows info as blocks
-bView = view.BlockView(bus,weather,solar)
+bView = view.BlockView(bus,weather,solar) # main view that shows info as blocks
+sView = view.SolarView(solar) # print out solar production
+wView = view.WeatherView(weather)
+tView = view.TransitView(bus)
 
 #If true show default pixel display
 show_blocks = True
+
+view_modes = ['main','solar','weather','bus']
+view_mode = 0
 
 # Tells XModel object to pull fresh data from its API
 def x_thread(obj, delay):
@@ -28,15 +33,27 @@ def x_thread(obj, delay):
         sleep(delay)
 
 def joystick(delay):
-    global show_blocks
+    global show_blocks, view_mode
     while True:
         for event in sense.stick.get_events():
-            if event.action == "released" and event.direction == "middle":
-                show_blocks = not show_blocks
-                if show_blocks:
-                    bView.draw()
-                else:
+            if event.action == "released":
+                if event.direction == "middle":
+                    show_blocks = not show_blocks
+                    if not show_blocks:
+                        bView.clear()
+                elif event.direction == "right":
                     sense.clear()
+                    view_mode = (view_mode+1)%len(view_modes)
+                elif event.direction == "left":
+                    sense.clear()
+                    view_mode = (view_mode-1)%len(view_modes)
+                elif event.direction == "down":
+                    sense.clear()
+                    view_mode = 0
+                elif event.direction == "up":
+                    pass # some kind of settings should go here.
+                if view_modes[view_mode] != "main":
+                    show_blocks = True
 
 try:
     # Services
@@ -51,16 +68,24 @@ except:
     traceback.print_exc()
 
 while True:
-    bView.refresh()
+    if view_modes[view_mode] == "main" and show_blocks:
+        bView.refresh()
+    elif view_modes[view_mode] == "solar":
+        sView.refresh()
+    elif view_modes[view_mode] == "weather":
+        wView.refresh()
+    elif view_modes[view_mode] == "bus":
+        tView.refresh()
+
     if bus.updated or weather.updated or solar.updated:
         os.system('clear')
         print(bus)
         print(weather)
         print(solar)
         print("")
-    
+
         if bus.updated: bus.updated = False
         if weather.updated: weather.updated = False
         if solar.updated: solar.updated = False
 
-    sleep(2)
+    sleep(0.1)

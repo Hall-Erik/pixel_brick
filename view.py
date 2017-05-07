@@ -26,12 +26,49 @@ e,e,e,e,e,e,e,e,
 e,e,e,e,e,e,e,e
 ]
 
+class TransitView(object):
+    def __init__(self, bus):
+        self.bus = bus
+
+    def refresh(self):
+        self.draw()
+
+    def draw(self):
+        pass
+
+class WeatherView(object):
+    def __init__(self, weather):
+        self.weather = weather
+
+    def refresh(self):
+        self.draw()
+
+    def draw(self):
+        pass
+
+class SolarView(object):
+    def __init__(self, solar):
+        self.solar = solar
+        pass
+
+    def refresh(self):
+        self.draw()
+
+    def draw(self):
+        s = "Solar today: %dkWh this month: %dkWh" % (self.solar.kWh_today/1000, self.solar.kWh_month/1000)
+        sense.show_message(text_string=s, scroll_speed=0.04, text_colour=y)
+
 class BlockView(object):
     def __init__(self, bus, weather, solar):
         global grid, sense
         self.bus = bus
         self.weather = weather
         self.solar = solar
+        self.draw()
+
+    def clear(self):
+        global grid
+        grid = [e for x in range(0,64)]
         self.draw()
 
     def refresh(self):
@@ -42,7 +79,7 @@ class BlockView(object):
         self.show_curr()
         self.show_solar_summary()
         self.show_solar_month()
-        if self.updated:
+        if self.updated or sense.get_pixels() == [e for x in range(0,64)] and sense.get_pixels() != grid:
             self.draw()
 
     def draw(self):
