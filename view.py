@@ -34,7 +34,19 @@ class TransitView(object):
         self.draw()
 
     def draw(self):
-        pass
+        progress_rate = self.bus.progress_rate
+        if progress_rate == 1:
+            sense.show_message(text_string="Bus on time", scroll_speed=0.04, text_colour=g)
+        elif progress_rate == 0:
+            sense.show_message(text_string="Bus 5-10 min early", scroll_speed=0.04, text_colour=y)
+        elif progress_rate == 4:
+            sense.show_message(text_string="Bus 10+ min early", scroll_speed=0.04, text_colour=y)
+        elif progress_rate == 2:
+            sense.show_message(text_string="Bus 5-10 min late", scroll_speed=0.04, text_colour=r)
+        elif progress_rate == 3:
+            sense.show_message(text_string="Bus on 10+ min late", scroll_speed=0.04, text_colour=r)
+        else:
+            sense.show_message(text_string="No bus data", scroll_speed=0.04, text_colour=b)
 
 class WeatherView(object):
     def __init__(self, weather):
@@ -44,12 +56,20 @@ class WeatherView(object):
         self.draw()
 
     def draw(self):
-        pass
+        temp = self.weather.temp
+        hi = self.weather.hi_now
+        pop = self.weather.pop
+        snow = self.weather.snow
+        uv = self.weather.uv
+        sense.show_message(text_string="Temp: %dF" % temp, scroll_speed=0.04, text_colour=b)
+        sense.show_message(text_string="Hi: %dF" % hi, scroll_speed=0.04, text_colour=r)
+        color = b if snow else w
+        sense.show_message(text_string="POP: %d%%" % pop, scroll_speed=0.04, text_colour=color)
+        sense.show_message(text_string="UV: %d" % uv, scroll_speed=0.04, text_colour=y)
 
 class SolarView(object):
     def __init__(self, solar):
         self.solar = solar
-        pass
 
     def refresh(self):
         self.draw()
