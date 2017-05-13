@@ -1,9 +1,10 @@
 # This will handle output to the 8x8 LED grid.
 
-from sense_hat import SenseHat
+# from sense_hat import SenseHat
+# from nonsensehat import NonsenseHat
 import model
 
-sense = SenseHat()
+# sense = SenseHat()
 
 #colours
 g = [0,100,0] # Green
@@ -27,13 +28,15 @@ e,e,e,e,e,e,e,e
 ]
 
 class TransitView(object):
-    def __init__(self, bus):
+    def __init__(self, sense, bus):
         self.bus = bus
+        self.sense = sense
 
     def refresh(self):
         self.draw()
 
     def draw(self):
+        sense = self.sense
         progress_rate = self.bus.progress_rate
         if progress_rate == 1:
             sense.show_message(text_string="Bus on time", scroll_speed=0.04, text_colour=g)
@@ -49,41 +52,49 @@ class TransitView(object):
             sense.show_message(text_string="No bus data", scroll_speed=0.04, text_colour=b)
 
 class WeatherView(object):
-    def __init__(self, weather):
+    def __init__(self, sense, weather):
         self.weather = weather
+        self.sense = sense
 
     def refresh(self):
         self.draw()
 
     def draw(self):
+        sense = self.sense
         temp = self.weather.temp
         hi = self.weather.hi_now
         pop = self.weather.pop
         snow = self.weather.snow
         uv = self.weather.uv
-        sense.show_message(text_string="Temp: %dF" % temp, scroll_speed=0.04, text_colour=b)
-        sense.show_message(text_string="Hi: %dF" % hi, scroll_speed=0.04, text_colour=r)
+        if sense.show_message(text_string="Temp: %dF" % temp, scroll_speed=0.04, text_colour=b) == 1:
+            return
+        if sense.show_message(text_string="Hi: %dF" % hi, scroll_speed=0.04, text_colour=r) == 1:
+            return
         color = b if snow else w
-        sense.show_message(text_string="POP: %d%%" % pop, scroll_speed=0.04, text_colour=color)
+        if sense.show_message(text_string="POP: %d%%" % pop, scroll_speed=0.04, text_colour=color) == 1:
+            return
         sense.show_message(text_string="UV: %d" % uv, scroll_speed=0.04, text_colour=y)
 
+
 class SolarView(object):
-    def __init__(self, solar):
+    def __init__(self, sense, solar):
         self.solar = solar
+        self.sense = sense
 
     def refresh(self):
         self.draw()
 
     def draw(self):
+        sense = self.sense
         s = "Solar today: %dkWh this month: %dkWh" % (self.solar.kWh_today/1000, self.solar.kWh_month/1000)
         sense.show_message(text_string=s, scroll_speed=0.04, text_colour=y)
 
 class BlockView(object):
-    def __init__(self, bus, weather, solar):
-        global grid, sense
+    def __init__(self, sense, bus, weather, solar):
         self.bus = bus
         self.weather = weather
         self.solar = solar
+        self.sense = sense
         self.draw()
 
     def clear(self):
@@ -92,6 +103,7 @@ class BlockView(object):
         self.draw()
 
     def refresh(self):
+        sense = self.sense
         self.show_bus()
         self.show_uv()
         self.show_pop()
@@ -103,6 +115,7 @@ class BlockView(object):
             self.draw()
 
     def draw(self):
+        sense = self.sense
         sense.set_pixels(grid)
         self.updated = False
 

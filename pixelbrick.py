@@ -1,4 +1,5 @@
-from sense_hat import SenseHat
+# from sense_hat import SenseHat
+from nonsensehat import NonsenseHat
 from time import sleep, strftime, localtime
 import model
 import view
@@ -7,7 +8,8 @@ import os
 import traceback
 import datetime
 
-sense = SenseHat()
+# sense = SenseHat()
+sense = NonsenseHat()
 
 # Initialize models
 weather = model.WeatherModel()
@@ -15,10 +17,10 @@ bus = model.BusModel()
 solar = model.SolarModel()
 
 # Initialize the view
-bView = view.BlockView(bus,weather,solar) # main view that shows info as blocks
-sView = view.SolarView(solar) # print out solar production
-wView = view.WeatherView(weather)
-tView = view.TransitView(bus)
+bView = view.BlockView(sense,bus,weather,solar) # main view that shows info as blocks
+sView = view.SolarView(sense,solar) # print out solar production
+wView = view.WeatherView(sense,weather)
+tView = view.TransitView(sense,bus)
 
 #If true show default pixel display
 show_blocks = True
@@ -37,6 +39,8 @@ def joystick(delay):
     while True:
         for event in sense.stick.get_events():
             if event.action == "released":
+                if view_modes[view_mode] != "main":
+                    sense.interrupt = True
                 if event.direction == "middle":
                     show_blocks = not show_blocks
                     if not show_blocks:
